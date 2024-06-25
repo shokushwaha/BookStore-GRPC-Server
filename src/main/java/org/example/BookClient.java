@@ -9,6 +9,9 @@ import org.example.BookServiceGrpc.*;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
 public class BookClient {
     private final ManagedChannel channel;
     private final BookServiceBlockingStub blockingStub;
@@ -60,12 +63,20 @@ public class BookClient {
         response.getBooksList().forEach(book -> System.out.println(book.toString()));
     }
 
+
+    // Generate a random 10-digit number
+    private static String generateRandomIsbn() {
+        Random random = ThreadLocalRandom.current();
+        return String.format("%010d", random.nextLong(1_000_000_000L));
+    }
     public static void main(String[] args) {
         BookClient client = new BookClient("localhost", 50051);
 
         // Add a new book
+
+        String randomIsbn = generateRandomIsbn();
         Book newBook = Book.newBuilder()
-                .setIsbn("1234567890")
+                .setIsbn(randomIsbn)
                 .setTitle("Sample Book")
                 .addAllAuthors(Collections.singletonList("Author1"))
                 .setPageCount(200)
