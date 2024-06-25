@@ -8,142 +8,164 @@ import org.example.BookOuterClass.*;
 import org.example.BookServiceGrpc.*;
 import org.junit.*;
 
-import java.io.IOException;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
 public class BookClientTest {
 
+    // Rule to automatically close the gRPC server and channel
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
-    private BookServiceGrpc.BookServiceBlockingStub blockingStub;
+    private ManagedChannel channel;
+    private BookServiceBlockingStub blockingStub;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         // Generate a unique server name
         String serverName = InProcessServerBuilder.generateName();
 
-        // Create and start the in-process server with the service implementation
+        // Start the in-process server
         grpcCleanup.register(InProcessServerBuilder.forName(serverName)
                 .directExecutor()
                 .addService(new BookServiceImpl())
                 .build()
                 .start());
 
-        // Create a channel to the in-process server
-        ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName)
+        // Create an in-process channel
+        channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName)
                 .directExecutor()
                 .build());
 
-        // Create a blocking stub for the client
+        // Create the blocking stub for the client
         blockingStub = BookServiceGrpc.newBlockingStub(channel);
     }
 
     @Test
     public void testAddBook() {
-        // Create a Book instance
+        // Create a new book with a random ISBN
+        String isbn = UUID.randomUUID().toString();
         Book book = Book.newBuilder()
-                .setIsbn("1234567890")
+                .setIsbn(isbn)
                 .setTitle("Sample Book")
                 .addAllAuthors(Collections.singletonList("Author1"))
-                .setPageCount(200)
+                .setPageCount(100)
                 .build();
 
-        // Test adding a book
-        AddBookRequest request = AddBookRequest.newBuilder()
-                .setBook(book)
-                .build();
+        // Create the add book request
+        AddBookRequest request = AddBookRequest.newBuilder().setBook(book).build();
+
+        // Send the request and get the response
         AddBookResponse response = blockingStub.addBook(request);
 
         // Verify the response
-        assertEquals("Book added: Sample Book", response.getMessage());
+        assertEquals("Book added successfully!", response.getMessage());
+
+        // Try adding the same book again to check for error message
+        response = blockingStub.addBook(request);
+        assertEquals("Error: Book with ISBN " + isbn + " already exists.", response.getMessage());
     }
 
     @Test
     public void testUpdateBook() {
-        // Add a book first to update it
-        Book initialBook = Book.newBuilder()
-                .setIsbn("1111111111")
-                .setTitle("Initial Book")
-                .addAllAuthors(Collections.singletonList("Initial Author"))
+        // Create a new book with a random ISBN
+        String isbn = UUID.randomUUID().toString();
+        Book book = Book.newBuilder()
+                .setIsbn(isbn)
+                .setTitle("Sample Book")
+                .addAllAuthors(Collections.singletonList("Author1"))
                 .setPageCount(100)
                 .build();
-        AddBookRequest addRequest = AddBookRequest.newBuilder()
-                .setBook(initialBook)
-                .build();
-        blockingStub.addBook(addRequest);
 
-        // Create an updated Book instance
+        // Add the book first
+        blockingStub.addBook(AddBookRequest.newBuilder().setBook(book).build());
+
+        // Update the book
         Book updatedBook = Book.newBuilder()
-                .setIsbn("1111111111")
+                .setIsbn(isbn)
                 .setTitle("Updated Book Title")
-                .addAllAuthors(Collections.singletonList("Updated Author"))
-                .setPageCount(250)
+                .addAllAuthors(Collections.singletonList("Author1"))
+                .setPageCount(150)
                 .build();
 
-        // Test updating a book
-        UpdateBookRequest request = UpdateBookRequest.newBuilder()
-                .setIsbn("1111111111")
+        // Create the update book request
+        UpdateBookRequest updateRequest = UpdateBookRequest.newBuilder()
+                .setIsbn(isbn)
                 .setBook(updatedBook)
                 .build();
-        UpdateBookResponse response = blockingStub.updateBook(request);
+
+        // Send the request and get the response
+        UpdateBookResponse updateResponse = blockingStub.updateBook(updateRequest);
 
         // Verify the response
-        assertEquals("Book updated: Updated Book Title", response.getMessage());
+        assertEquals("Book updated successfully!", updateResponse.getMessage());
+
+        // Try updating a non-existing book
+        String nonExistentIsbn = UUID.randomUUID().toString();
+        updateRequest = UpdateBookRequest.newBuilder()
+                .setIsbn(nonExistentIsbn)
+                .setBook(updatedBook)
+                .build();
+
+        updateResponse = blockingStub.updateBook(updateRequest);
+        assertEquals("Error: Book with ISBN " + nonExistentIsbn + " does not exist.", updateResponse.getMessage());
     }
 
     @Test
     public void testDeleteBook() {
-        // Add a book first to delete it
+        // Create a new book with a random ISBN
+        String isbn = UUID.randomUUID().toString();
         Book book = Book.newBuilder()
-                .setIsbn("2222222222")
-                .setTitle("Book to be Deleted")
-                .addAllAuthors(Collections.singletonList("Author"))
-                .setPageCount(150)
+                .setIsbn(isbn)
+                .setTitle("Sample Book")
+                .addAllAuthors(Collections.singletonList("Author1"))
+                .setPageCount(100)
                 .build();
-        AddBookRequest addRequest = AddBookRequest.newBuilder()
-                .setBook(book)
-                .build();
-        blockingStub.addBook(addRequest);
 
-        // Test deleting a book
-        DeleteBookRequest request = DeleteBookRequest.newBuilder()
-                .setIsbn("2222222222")
-                .build();
-        DeleteBookResponse response = blockingStub.deleteBook(request);
+        // Add the book first
+        blockingStub.addBook(AddBookRequest.newBuilder().setBook(book).build());
+
+        // Create the delete book request
+        DeleteBookRequest deleteRequest = DeleteBookRequest.newBuilder().setIsbn(isbn).build();
+
+        // Send the request and get the response
+        DeleteBookResponse deleteResponse = blockingStub.deleteBook(deleteRequest);
 
         // Verify the response
-        assertEquals("Book deleted: 2222222222", response.getMessage());
+        assertEquals("Book deleted successfully!", deleteResponse.getMessage());
+
+        // Try deleting a non-existing book
+        deleteResponse = blockingStub.deleteBook(deleteRequest);
+        assertEquals("Error: Book with ISBN " + isbn + " does not exist.", deleteResponse.getMessage());
     }
 
     @Test
     public void testGetAllBooks() {
-        // Add a book to get
+        // Create and add a new book with a random ISBN
+        String isbn = UUID.randomUUID().toString();
         Book book = Book.newBuilder()
-                .setIsbn("1234567890")
+                .setIsbn(isbn)
                 .setTitle("Sample Book")
                 .addAllAuthors(Collections.singletonList("Author1"))
-                .setPageCount(200)
+                .setPageCount(100)
                 .build();
-        AddBookRequest addRequest = AddBookRequest.newBuilder()
-                .setBook(book)
-                .build();
-        blockingStub.addBook(addRequest);
 
-        // Test getting all books
-        GetBooksRequest request = GetBooksRequest.newBuilder().build();
-        GetBooksResponse response = blockingStub.getBooks(request);
+        blockingStub.addBook(AddBookRequest.newBuilder().setBook(book).build());
 
-        // Verify the response contains the expected book
-        assertEquals(1, response.getBooksCount());
-        Book returnedBook = response.getBooks(0);
-        assertEquals("1234567890", returnedBook.getIsbn());
-        assertEquals("Sample Book", returnedBook.getTitle());
-        assertEquals(1, returnedBook.getAuthorsCount());
-        assertEquals("Author1", returnedBook.getAuthors(0));
-        assertEquals(200, returnedBook.getPageCount());
+        // Create the get books request
+        GetBooksRequest getBooksRequest = GetBooksRequest.newBuilder().build();
+
+        // Send the request and get the response
+        GetBooksResponse getBooksResponse = blockingStub.getBooks(getBooksRequest);
+
+        // Verify the response
+        assertEquals(1, getBooksResponse.getBooksCount());
+        Book retrievedBook = getBooksResponse.getBooks(0);
+        assertEquals(book.getIsbn(), retrievedBook.getIsbn());
+        assertEquals(book.getTitle(), retrievedBook.getTitle());
+        assertEquals(book.getAuthorsList(), retrievedBook.getAuthorsList());
+        assertEquals(book.getPageCount(), retrievedBook.getPageCount());
     }
 }

@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class BookServer {
     public static void main(String[] args) throws IOException, InterruptedException {
-        Server server = ServerBuilder.forPort(8080)
+        Server server = ServerBuilder.forPort(50051)
                 .addService(new BookServiceImpl())
                 .build();
 

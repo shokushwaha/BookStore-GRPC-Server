@@ -85,15 +85,15 @@ public class BookClient {
 
         // Update the book
         Book updatedBook = Book.newBuilder()
-                .setIsbn("1234567890")
+                .setIsbn(randomIsbn)
                 .setTitle("Updated Book Title")
                 .addAllAuthors(Collections.singletonList("Author1"))
                 .setPageCount(250)
                 .build();
-        client.updateBook("1234567890", updatedBook);
+        client.updateBook(randomIsbn, updatedBook);
 
         // Delete the book
-        client.deleteBook("1234567890");
+        client.deleteBook(randomIsbn);
 
         // Add the book
         client.addBook(newBook);

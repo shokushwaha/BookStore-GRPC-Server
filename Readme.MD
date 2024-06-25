@@ -14,7 +14,7 @@ This project implements a simple gRPC-based bookstore service in Java. It provid
 
 1. Clone the repository
 
-`git clone https://github.com/your-username/bookstore-grpc.git`
+`git clone `https://github.com/shokushwaha/BookStore-GRPC-Server.git`
 `cd bookstore-grpc`
 
 2.  Set Up Your Development Environment
@@ -75,7 +75,9 @@ sourceSets {
 ```
 
 
-4.  Compile Protobuf
+
+## Run The Server
+1. Compile Protobuf
     Run the following command to generate Java classes from the protobuf definition:
 
 `./gradlew clean`
@@ -86,9 +88,11 @@ sourceSets {
 
 
 
-5. Run the GRPC Server:
-   Run the main method in BookServiceImpl.java file.
+2. Run the GRPC Server:
+   Run the main method in BookServer.java file.
 
 
-6. Run the Client to test the funcionalities:
-   Run the main method in BookClient.java file.
+3. Run the Client to test the functionalities:
+   Run the main method in BookClient.java file to test the functionalities( Add Book Service, Update Book Service, Delete Book Service, Get All Books Service).
+
+
