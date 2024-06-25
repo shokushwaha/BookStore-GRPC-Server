@@ -43,6 +43,16 @@ public class BookServiceImpl extends   BookServiceImplBase {
         // Extract book information from request
         Book book = request.getBook();
 
+        // Check if the book with same isbn already exists
+        if (bookStorage.containsKey(book.getIsbn())) {
+            AddBookResponse response = AddBookResponse.newBuilder()
+                    .setMessage("Error: Book with ISBN " + book.getIsbn() + " already exists.")
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
         // Store the book in in-memory hashmap
         bookStorage.put(book.getIsbn(), book);
 
@@ -65,6 +75,16 @@ public class BookServiceImpl extends   BookServiceImplBase {
         // Extract the book information
         Book book = request.getBook();
 
+        // Check if book with isbn does not exist
+        if (!bookStorage.containsKey(book.getIsbn())) {
+            UpdateBookResponse response = UpdateBookResponse.newBuilder()
+                    .setMessage("Error: Book with ISBN " + book.getIsbn() + " does not exist.")
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
+
         // Updating the book information
         bookStorage.put(book.getIsbn(), book);
 
@@ -83,6 +103,17 @@ public class BookServiceImpl extends   BookServiceImplBase {
     // Method to delete book
     @Override
     public void deleteBook(DeleteBookRequest request, StreamObserver<DeleteBookResponse> responseObserver) {
+
+        // Check if the book with isbn does not exist
+        if (!bookStorage.containsKey(request.getIsbn())) {
+            // If the book does not exist, return an error message
+            DeleteBookResponse response = DeleteBookResponse.newBuilder()
+                    .setMessage("Error: Book with ISBN " + request.getIsbn() + " does not exist.")
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return;
+        }
 
         // Removing the book from hashmap
         bookStorage.remove(request.getIsbn());
