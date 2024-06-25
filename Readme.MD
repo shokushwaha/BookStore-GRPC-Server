@@ -1,98 +1,119 @@
-# Bookstore gRPC Project
+# BookService gRPC Application
 
-## Overview
-
-This project implements a simple gRPC-based bookstore service in Java. It provides CRUD operations for managing books using an in-memory data store. The project utilizes Gradle for dependency management and build automation, Protobuf for data serialization, and gRPC for RPC communication.
-
+This project is a gRPC-based Book Management System implemented in Java. It includes a gRPC server (`BookServer`) that provides CRUD operations for managing books and a gRPC client (`BookClient`) to interact with the server. The project uses Protocol Buffers (protobuf) for defining the data models and gRPC services.
 ## Prerequisites
-- Java Development Kit (JDK) 8 or higher
-- Gradle 8.5 or higher
-- IntelliJ IDEA or any other preferred IDE
-- Protobuf Compiler (protoc)
 
-## Step By Step
+- Java 8 or higher
+- Gradle 8 or higher
+- Protocol Buffers Compiler (`protoc`) 3.18.1 or higher
 
-1. Clone the repository
+## Setup and Build Instructions
 
-`git clone `https://github.com/shokushwaha/BookStore-GRPC-Server.git`
-`cd bookstore-grpc`
+1. **Clone the repository:**
 
-2.  Set Up Your Development Environment
-    Open the project in IntelliJ IDEA or any other preferred IDE.
+    ```bash
+    git clone https://github.com/shokushwaha/BookStore-GRPC-Server.git
+    cd book-service-grpc
+    ```
 
-3. Update build.gradle
-   Ensure your build.gradle includes the following configurations:
+2. **Install Protocol Buffers:**
+
+   Download and install the Protocol Buffers compiler (`protoc`) from the [official website](https://github.com/protocolbuffers/protobuf/releases).
+
+3. **Build the project:**
+
+   Use Gradle to build the project and generate gRPC classes.
+
+    ```bash
+    ./gradlew clean build
+    ```
+
+   This command will compile the `proto` files, generate Java classes, and compile the Java source code.
+
+4. **Run the Server:**
+
+   You can run the gRPC server using the following command:
+
+    ```bash
+    ./gradlew run --args='org.example.BookServer'
+    ```
+
+   
+
+5. **Run the Client:**
+
+   To interact with the server, run the `BookClient`:
+
+    ```bash
+    ./gradlew run --args='org.example.BookClient'
+    ```
+
+
+## Services
+
+### AddBook Method
+
+#### Request: AddBookRequest
+
+- `Book book`: A `Book` message containing the book's details.
+   - `string isbn`: Unique identifier for the book.
+   - `string title`: Title of the book.
+   - `repeated string authors`: List of authors.
+   - `int32 page_count`: Number of pages.
+
+#### Response: AddBookResponse
+
+- `string message`: A message indicating the result of the operation.
+
+---
+
+### UpdateBook Method
+
+#### Request: UpdateBookRequest
+
+- `string isbn`: The ISBN of the book to update.
+- `Book book`: Updated `Book` message containing the new details.
+   - `string isbn`: Unique identifier for the book.
+   - `string title`: Title of the book.
+   - `repeated string authors`: List of authors.
+   - `int32 page_count`: Number of pages.
+
+#### Response: UpdateBookResponse
+
+- `string message`: A message indicating the result of the operation.
+
+---
+
+### DeleteBook Method
+
+#### Request: DeleteBookRequest
+
+- `string isbn`: The ISBN of the book to delete.
+
+#### Response: DeleteBookResponse
+
+- `string message`: A message indicating the result of the operation.
+
+---
+
+### GetBooks Method
+
+#### Request: GetBooksRequest
+
+- No specific fields defined.
+
+#### Response: GetBooksResponse
+
+- `repeated Book books`: List of `Book` messages containing all available books.
+   - `string isbn`: Unique identifier for the book.
+   - `string title`: Title of the book.
+   - `repeated string authors`: List of authors.
+   - `int32 page_count`: Number of pages.
+
+
+## Test
+The application includes unit tests for the BookServiceImpl class. You can run the tests using the following Gradle command:
+
+```commandline
+./gradlew test
 ```
-plugins {
-    id 'java'
-    id 'com.google.protobuf' version '0.8.17'
-}
-
-repositories {
-    mavenCentral()
-}
-
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:3.18.1'
-    }
-    plugins {
-        grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.41.0'
-        }
-    }
-    generateProtoTasks {
-        all().each { task ->
-            task.builtins {
-                java {}
-            }
-            task.plugins {
-                grpc {}
-            }
-        }
-    }
-}
-
-dependencies {
-     implementation 'io.grpc:grpc-netty:1.41.0'
-    implementation 'io.grpc:grpc-protobuf:1.41.0'
-    implementation 'io.grpc:grpc-stub:1.41.0'
-    implementation 'com.google.protobuf:protobuf-java:3.24.0'
-    implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'io.grpc:grpc-testing:1.57.0'
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs += 'build/generated/source/proto/main/grpc'
-            srcDirs += 'build/generated/source/proto/main/java'
-        }
-    }
-}
-```
-
-
-
-## Run The Server
-1. Compile Protobuf
-    Run the following command to generate Java classes from the protobuf definition:
-
-`./gradlew clean`
-
-`./gradlew build`
-
-`./gradlew generateProto`
-
-
-
-2. Run the GRPC Server:
-   Run the main method in BookServer.java file.
-
-
-3. Run the Client to test the functionalities:
-   Run the main method in BookClient.java file to test the functionalities( Add Book Service, Update Book Service, Delete Book Service, Get All Books Service).
-
-
